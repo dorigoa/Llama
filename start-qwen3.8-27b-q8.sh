@@ -1,5 +1,5 @@
 /opt/llama.cpp/llama-server \
-  -hf unsloth/Qwen3.8-27B-GGUF:Q8_0 \
+  -m /nvme/gguf/qwen3.8-27b/Qwen3.8-27B-Q8_0.gguf \
   -ngl 66 -ts 1,1 \
   -c 81920 -ctk q8_0 -ctv q8_0 -ub 256 \
   -fa on \
