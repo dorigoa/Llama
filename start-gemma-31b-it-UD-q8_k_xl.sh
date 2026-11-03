@@ -11,4 +11,4 @@
   -sm tensor \
   --no-mmproj-offload \
   -ngl 44 \
-	--host 192.168.1.200 --port 8080
+  --host 192.168.1.200 --port 8080
