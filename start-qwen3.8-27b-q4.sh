@@ -1,0 +1,11 @@
+/opt/llama.cpp/llama-server \
+  -m /nvme/gguf/qwen3.8-27b/Qwen3.8-27B-UD-Q4_K_XL.gguf \
+  -md /nvme/gguf/qwen3.8-27b/mtp-Qwen3.8-27B-Q4_0.gguf \
+  -ngl 99 -ts 1,1 \
+  -c 180000 \
+  -fa on \
+  --jinja \
+  -lv 4 --log-file llama-server.out \
+  --spec-type draft-mtp --spec-draft-n-max 3 -np 1 \
+  -sm tensor \
+  --no-mmproj-offload
