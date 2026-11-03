@@ -5,7 +5,7 @@
   -c 180000 \
   -fa on \
   --jinja \
-  -lv 4 --log-file llama-server.out \
+  -lv 4 --log-file /var/log/llama-server.out \
   --spec-type draft-mtp --spec-draft-n-max 3 -np 1 \
   -sm tensor \
   --no-mmproj-offload
