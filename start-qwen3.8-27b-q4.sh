@@ -9,4 +9,4 @@
   --spec-type draft-mtp --spec-draft-n-max 3 -np 1 \
   -sm tensor \
   --no-mmproj-offload \
-	--host 192.168.1.200 --port 8080
+  --host 192.168.1.200 --port 8080
