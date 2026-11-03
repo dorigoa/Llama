@@ -4,7 +4,7 @@
 	-c 81920 -ctk q8_0 -ctv q8_0 -ub 256 \
 	-fa on \
 	--jinja \
-	-lv 4 --log-file llama-server.out \
+	-lv 4 --log-file /var/log/llama-server.out \
 	--spec-type draft-mtp --spec-draft-n-max 5 -np 1 \
 	-sm tensor \
 	--no-mmproj-offload
