@@ -1,0 +1,14 @@
+/opt/llama.cpp/llama-server \
+  -m /nvme/gguf/Gemma-4-31B-it/gemma-4-31B-it-qat-UD-Q4_K_XL.gguf \
+  -md /nvme/gguf/Gemma-4-31B-it/mtp-gemma-4-31B-it-Q8_0.gguf \
+  --chat-template-file /nvme/gguf/Gemma-4-31B-it/chat-template.jinja \
+  -ts 1,1 \
+  -c 150000 -ctk q8_0 -ctv q8_0 \
+  -fa on \
+  --jinja \
+  -lv 4 --log-file /var/log/llama-server.out \
+  --spec-type draft-mtp --spec-draft-n-max 3 \
+  -np 1 \
+  -sm tensor \
+  --no-mmproj-offload \
+  -ngl 999
