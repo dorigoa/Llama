@@ -1,4 +1,5 @@
 /opt/llama.cpp/llama-server \
+	-a "Qwen3.8-27b (ud-q8_k_xl)"
 	-m /nvme/gguf/qwen3.8-27b/Qwen3.8-27B-UD-Q8_K_XL.gguf \
 	-ngl 59 -ts 1,1 \
 	-c 81920 -ctk q8_0 -ctv q8_0 -ub 256 \
