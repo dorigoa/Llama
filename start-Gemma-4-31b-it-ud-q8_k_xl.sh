@@ -1,5 +1,5 @@
 /opt/llama.cpp/llama-server \
-  -a "Gemma-4-31B-it (ud-q8_k_xl)"
+  -a "Gemma-4-31B-it (ud-q8_k_xl)" \
   -m /nvme/gguf/Gemma-4-31B-it/gemma-4-31B-it-UD-Q8_K_XL.gguf \
   -md /nvme/gguf/Gemma-4-31B-it/mtp-gemma-4-31B-it-Q8_0.gguf \
   --chat-template-file /nvme/gguf/Gemma-4-31B-it/chat-template.jinja \
