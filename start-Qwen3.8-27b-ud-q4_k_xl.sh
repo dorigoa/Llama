@@ -3,7 +3,7 @@
   -m /nvme/gguf/qwen3.8-27b/Qwen3.8-27B-UD-Q4_K_XL.gguf \
   -md /nvme/gguf/qwen3.8-27b/mtp-Qwen3.8-27B-Q4_0.gguf \
   -ngl 999 -ts 1,1 \
-  -c 262144 -b 2048 -ub 1024 -ctk q8_0 -ctv q8_0 \
+  -c 262144 -ctk q8_0 -ctv q8_0 \
   -fa on \
   --jinja \
   -lv 4 --log-file ~/llama-server.out \
