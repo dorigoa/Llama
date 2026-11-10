@@ -10,4 +10,5 @@
 	-sm tensor \
 	--no-mmproj-offload \
 	--chat-template-file ~/Llama/chat-templates/qwen3.8-27b.jinja \
+	--metrics \
 	--host 192.168.1.200 --port 8080
