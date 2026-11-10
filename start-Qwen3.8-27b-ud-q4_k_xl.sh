@@ -2,12 +2,14 @@
   -a "Qwen3.8-27b-ud-q4_k_xl" \
   -m /nvme/gguf/qwen3.8-27b/Qwen3.8-27B-UD-Q4_K_XL.gguf \
   -md /nvme/gguf/qwen3.8-27b/mtp-Qwen3.8-27B-Q4_0.gguf \
-  -ngl 99 -ts 1,1 \
-  -c 180000 \
+  -ngl 999 -ts 1,1 \
+  -c 262144 -b 2048 -ub 1024 \
   -fa on \
   --jinja \
-  -lv 4 --log-file /var/log/llama-server.out \
+  -lv 4 --log-file ~/llama-server.out \
   --spec-type draft-mtp --spec-draft-n-max 3 -np 1 \
   -sm tensor \
   --no-mmproj-offload \
+  --chat-template-file ~/Llama/chat-templates/qwen3.8-27b.jinja \
+  --metrics \
   --host 192.168.1.200 --port 8080
