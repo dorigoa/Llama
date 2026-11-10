@@ -9,4 +9,5 @@
 	--spec-type draft-mtp --spec-draft-n-max 5 -np 1 \
 	-sm tensor \
 	--no-mmproj-offload \
+	--chat-template-file chat-templates/qwen3.8-27b.jinja \
 	--host 192.168.1.200 --port 8080
