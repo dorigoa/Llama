@@ -11,4 +11,4 @@ ONEAPI_DEVICE_SELECTOR='level_zero:*' /opt/llama.cpp/llama-server \
 	--no-mmproj-offload \
 	--chat-template-file ~/Llama/chat-templates/qwen3.8-27b.jinja \
 	--metrics \
-	--host 192.168.1.200 --port 8080
+	--host 192.168.1.200 --port 8080 --no-warmup
