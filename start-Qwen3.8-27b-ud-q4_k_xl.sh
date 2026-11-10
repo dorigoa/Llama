@@ -2,6 +2,7 @@ ONEAPI_DEVICE_SELECTOR='level_zero:*' /opt/llama.cpp/llama-server \
   -a "Qwen3.8-27b-ud-q4_k_xl" \
   -m /nvme/gguf/qwen3.8-27b/Qwen3.8-27B-UD-Q4_K_XL.gguf \
   -md /nvme/gguf/qwen3.8-27b/mtp-Qwen3.8-27B-Q4_0.gguf \
+	--load-mode none \
   -ngl 999 -ts 1,1 \
   -c 262144 -ctk q8_0 -ctv q8_0 \
   -fa on \
