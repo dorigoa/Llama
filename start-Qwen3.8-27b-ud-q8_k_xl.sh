@@ -15,7 +15,7 @@
 
 /opt/llama-b12246-sycl/llama-server \
 	-m /nvme/huggingface/hub/models--unsloth--Qwen3.8-27B-GGUF/snapshots/4ca720788d1e01f1bff70c033e0d0028fd02e502/Qwen3.8-27B-Q8_0.gguf \
-	--alias unsloth/Qwen3.8-27B-GGUF \
+	--alias Qwen3.8-27B-GGUF-Q8 \
 	--parallel 1 \
 	--flash-attn on \
 	--no-context-shift -c 262144 \
