@@ -23,7 +23,7 @@
 	--no-context-shift -c 262144 \
 	-ngl -1 \
 	--fit on \
-	--slot-save-path /home/alvise/.unsloth/studio/cache/llama-slots \
+	--slot-save-path /nvme/llama-slots \
 	--kv-unified \
 	--jinja \
 	--verbosity 4 \
