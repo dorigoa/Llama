@@ -38,7 +38,7 @@ usage() {
     echo "  -port <number>      Port number (default: 8080)"
     echo "  -host <address>     Host address (default: 0.0.0.0)"
     echo "  -8bit               Choose Unsloth quantizazion Q8_K_XL instead of the default Q4_K_XL"
-    echo "  -mpt                Enable multi token prediction (default: disable)"
+    echo "  -mtp                Enable multi token prediction (default: disable)"
     exit 1
 }
 
@@ -67,7 +67,7 @@ while [[ $# -gt 0 ]]; do
             shift 
             ;;
         -mtp)
-            if ["$quant" == "4"]
+            if [ "$quant" == "4" ]
             then
               mtp="-md /models/mtp-Qwen3.8-27B-Q4_0.gguf --spec-type draft-mtp --spec-draft-n-max 5 "
             else
@@ -104,13 +104,13 @@ podman run --rm -it --name llama-cockpit-server-72cb15ef \
   --userns=keep-id \
   -e XDG_CACHE_HOME=/tmp \
   -v /nvme/gguf:/models:ro \
-  -p 192.168.1.200:8080:8080 \
+  -p ${host}:${port}:${port} \
   docker.io/kyuz0/intel-b70-ai-toolboxes:sycl \
   llama-server \
   -m /models/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf $mtp \
   -c 262144 \
   -ngl 999 \
-  --host $host --port $port \
+  --host 0.0.0.0 --port $port \
   --load-mode none \
   -fa 1 \
   --cache-type-k f16 --cache-type-v f16 \
@@ -124,5 +124,5 @@ podman run --rm -it --name llama-cockpit-server-72cb15ef \
   --fit off \
   --cache-ram 0 \
   --chat-template-file /models/qwen3.8-27b.jinja \
-  -sm layer \
+  -sm $split \
   --metrics
