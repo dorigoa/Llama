@@ -108,7 +108,7 @@ fi
 echo "Chosen quantization : $quant"
 echo "Chosen model        : Qwen3.8-27B-UD-Q${quant}_K_XL.gguf"
 echo "Context size        : $context"
-echo "Speculative decode  : [${mtp[*]-}]"
+echo "Speculative decode  : [$mtp]"
 echo "Split mode          : $split"
 echo "Endpoint            : ${host}:${port}"
 echo "Log file            : $log"
@@ -116,7 +116,7 @@ echo "Log file            : $log"
 {
     echo "=== $(date -Is) ==="
     echo "model=Qwen3.8-27B-UD-Q${quant}_K_XL.gguf ctx=$context split=$split endpoint=${host}:${port}"
-    echo "mtp=[${mtp}]"
+    echo "mtp=[$mtp]"
     echo "==="
 } >>"$log"
 
@@ -133,7 +133,7 @@ nohup podman run --rm --name "$CONTAINER_NAME" \
   -p "${host}:${port}:${port}" \
   docker.io/kyuz0/intel-b70-ai-toolboxes:sycl \
   llama-server \
-  -m "/models/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf" "${mtp}" \
+  -m /models/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf $mtp \
   -c "$context" \
   -ngl 999 \
   --host 0.0.0.0 --port "$port" \
