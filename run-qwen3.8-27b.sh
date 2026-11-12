@@ -34,11 +34,11 @@ usage() {
     echo "Usage: $0 [options]" >&2
     echo ""
     echo "Options:"
-    echo "  --split <splitmode>  Quantization for unsloth (layer | tensor | row | nonw - default: layer)"
-    echo "  --port <number>      Port number (default: 8080)"
-    echo "  --host <address>     Host address (default: 0.0.0.0)"
-    echo "  --8bit               Choose Unsloth quantizazion Q8_K_XL instead of the default Q4_K_XL"
-    echo "  --mpt                Enable multi token prediction (default: disable)"
+    echo "  -split <splitmode>  Quantization for unsloth (layer | tensor | row | nonw - default: layer)"
+    echo "  -port <number>      Port number (default: 8080)"
+    echo "  -host <address>     Host address (default: 0.0.0.0)"
+    echo "  -8bit               Choose Unsloth quantizazion Q8_K_XL instead of the default Q4_K_XL"
+    echo "  -mpt                Enable multi token prediction (default: disable)"
     exit 1
 }
 
@@ -50,23 +50,23 @@ quant="4"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --split)
+        -split)
             split="$2"
             shift 2
             ;;
-        --host)
+        -host)
             host="$2"
             shift 2
             ;;
-        --port)
+        -port)
             port="$2"
             shift 2
             ;;
-        --8bit)
+        -8bit)
             quant="8"
             shift 2
             ;;
-        --mtp)
+        -mtp)
             if ["$quant" == "4"]
             then
               mtp="-md /models/mtp-Qwen3.8-27B-Q4_0.gguf --spec-type draft-mtp --spec-draft-n-max 5 "
@@ -75,7 +75,7 @@ while [[ $# -gt 0 ]]; do
             fi
             shift 1
             ;;
-        -h|--help)
+        -help)
             usage
             ;;
         *)
