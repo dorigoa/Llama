@@ -98,6 +98,7 @@ fi
 
 echo "Chosen quantization : $quant"
 echo "Chosen model        : Qwen3.8-27B-UD-Q${quant}_K_XL.gguf"
+echo "Context size        : $context"
 echo "Speculative decode  : [$mtp]"
 echo "Split mode          : $split"
 echo "Endpoint            : ${host}:${port}"
@@ -114,7 +115,7 @@ podman run --rm -it --name llama-cockpit-server-72cb15ef \
   docker.io/kyuz0/intel-b70-ai-toolboxes:sycl \
   llama-server \
   -m /models/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf $mtp \
-  -c 262144 \
+  -c $context \
   -ngl 999 \
   --host 0.0.0.0 --port $port \
   --load-mode none \
