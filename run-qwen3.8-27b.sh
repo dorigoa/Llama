@@ -67,9 +67,9 @@ while [[ $# -gt 0 ]]; do
             ;;
         -mtp)
             if [[ "$quant" == "4" ]]; then
-                mtp=(-md /models/mtp-Qwen3.8-27B-Q4_0.gguf --spec-type draft-mtp --spec-draft-n-max 5)
+                mtp="-md /models/mtp-Qwen3.8-27B-Q4_0.gguf --spec-type draft-mtp --spec-draft-n-max 5"
             else
-                mtp=(--spec-type draft-mtp --spec-draft-n-max 5)
+                mtp="--spec-type draft-mtp --spec-draft-n-max 5"
             fi
             shift
             ;;
@@ -116,7 +116,7 @@ echo "Log file            : $log"
 {
     echo "=== $(date -Is) ==="
     echo "model=Qwen3.8-27B-UD-Q${quant}_K_XL.gguf ctx=$context split=$split endpoint=${host}:${port}"
-    echo "mtp=[${mtp[*]-}]"
+    echo "mtp=[${mtp}]"
     echo "==="
 } >>"$log"
 
@@ -133,7 +133,7 @@ nohup podman run --rm --name "$CONTAINER_NAME" \
   -p "${host}:${port}:${port}" \
   docker.io/kyuz0/intel-b70-ai-toolboxes:sycl \
   llama-server \
-  -m "/models/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf" "${mtp[@]-}" \
+  -m "/models/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf" "${mtp}" \
   -c "$context" \
   -ngl 999 \
   --host 0.0.0.0 --port "$port" \
