@@ -18,13 +18,13 @@ is_valid_split() {
     return 1
 }
 
-is_valid_quant() {
-    local p
-    for p in "4 8"; do
-        [[ "$1" == "$p" ]] && return 0
-    done
-    return 1
-}
+# is_valid_quant() {
+#     local p
+#     for p in "4 8"; do
+#         [[ "$1" == "$p" ]] && return 0
+#     done
+#     return 1
+# }
 
 usage() {
     echo "Usage: $0 [options]" >&2
@@ -33,7 +33,7 @@ usage() {
     echo "  --split <splitmode>  Quantization for unsloth (layer | tensor | row | nonw - default: layer)"
     echo "  --port <number>      Port number (default: 8080)"
     echo "  --host <address>     Host address (default: 0.0.0.0)"
-    echo "  --quant <4|8>        Choose Unsloth quantizazion (4 or 8 bits, default: 4)"
+    echo "  --8bit               Choose Unsloth quantizazion Q8_K_XL instead of the default Q4_K_XL"
     echo "  --mpt                Enable multi token prediction (default: disable)"
     exit 1
 }
@@ -59,9 +59,8 @@ while [[ $# -gt 0 ]]; do
             port="$2"
             shift 2
             ;;
-        --quant)
-            quant="$2"
-            
+        --8bit)
+            quant="8"
             shift 2
             ;;
         --mtp)
@@ -85,11 +84,6 @@ done
 
 if ! is_valid_split "$split"; then
     echo "Error: Invalid split mode: $split" >&2
-    usage
-fi
-
-if ! is_valid_quant "$split"; then
-    echo "Error: Invalid quantization: $quant" >&2
     usage
 fi
 
