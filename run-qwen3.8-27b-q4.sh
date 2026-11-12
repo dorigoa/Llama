@@ -38,4 +38,5 @@ podman run --rm -it --name llama-cockpit-server-72cb15ef \
   --cache-ram 0 \
   --spec-type draft-mtp --spec-draft-n-max 5 \
   --chat-template-file /models/qwen3.8-27b.jinja \
-  -sm layer
+  -sm layer \
+  --metrics
