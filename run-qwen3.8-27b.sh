@@ -32,7 +32,7 @@ usage() {
 }
 
 split="layer"
-mtp=()
+mtp=""
 host="0.0.0.0"
 port="8080"
 quant="4"
