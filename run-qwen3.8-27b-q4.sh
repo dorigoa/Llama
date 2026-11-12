@@ -8,11 +8,11 @@
   
 # tensor split mode produced 40 tok/s but after a little while 1 GPU hung
 
-VALID_FAMILIES=(layer tensor row none)
+VALID_SPLITS=(layer tensor row none)
 
 is_valid_split() {
     local p
-    for p in "${VALID_FAMILIES[@]}"; do
+    for p in "${VALID_SPLITS[@]}"; do
         [[ "$1" == "$p" ]] && return 0
     done
     return 1
