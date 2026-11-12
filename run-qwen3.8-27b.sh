@@ -2,17 +2,11 @@
 
 set -euo pipefail
 
-#podman run --rm -it --name llama-cockpit-server-72cb15ef --device /dev/dri --group-add keep-groups --security-opt seccomp=unconfined --security-opt label=disable --userns=keep-id -e XDG_CACHE_HOME=/tmp -v /nvme/gguf:/models:ro -p 192.168.1.200:8080:8080 docker.io/kyuz0/intel-b70-ai-toolboxes:sycl llama-server -m /models/Qwen3.8-27B-UD-Q4_K_XL.gguf -c 67840 -ngl 999 --host 0.0.0.0 --port 8080 --load-mode none -fa 1 --cache-type-k f16 --cache-type-v f16 -b 2048 -ub 512 -np 1 --jinja --reasoning on --chat-template-kwargs {"reasoning_effort":"medium"} --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0 --jinja --fit off --cache-ram 0 --spec-type draft-mtp --spec-draft-n-max 3 -dev SYCL0,SYCL1
-
-
-#-dev is not required as llama-server takes by default all GPU podman provides (-dev /dev/dri)
-
-
-#podman run --rm -it --name llama-cockpit-server-72cb15ef --device /dev/dri --group-add keep-groups --security-opt seccomp=unconfined --security-opt label=disable --userns=keep-id -e XDG_CACHE_HOME=/tmp -v /nvme/gguf:/models:ro -p 192.168.1.200:8080:8080 docker.io/kyuz0/intel-b70-ai-toolboxes:sycl llama-server -m /models/Qwen3.8-27B-UD-Q4_K_XL.gguf -c 262144 -ngl 999 --host 0.0.0.0 --port 8080 --load-mode none -fa 1 --cache-type-k f16 --cache-type-v f16 -b 2048 -ub 512 -np 1 --jinja --reasoning on --chat-template-kwargs '{"reasoning_effort":"medium"}' --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0 --jinja --fit off --cache-ram 0 --spec-type draft-mtp --spec-draft-n-max 5 -sm tensor
-  
 # tensor split mode produced 40 tok/s but after a little while 1 GPU hung
+# -dev is not required as llama-server takes by default all GPU podman provides (-dev /dev/dri)
 
 VALID_SPLITS=(layer tensor row none)
+CONTAINER_NAME="llama-cockpit-server-72cb15ef"
 
 is_valid_split() {
     local p
@@ -22,33 +16,28 @@ is_valid_split() {
     return 1
 }
 
-# is_valid_quant() {
-#     local p
-#     for p in "4 8"; do
-#         [[ "$1" == "$p" ]] && return 0
-#     done
-#     return 1
-# }
-
 usage() {
     echo "Usage: $0 [options]" >&2
     echo ""
     echo "Options:"
-    echo "  -split <splitmode>  Quantization for unsloth (layer | tensor | row | nonw - default: layer)"
+    echo "  -split <splitmode>  Split mode (layer | tensor | row | none - default: layer)"
     echo "  -port <number>      Port number (default: 8080)"
     echo "  -host <address>     Host address (default: 0.0.0.0)"
-    echo "  -8bit               Choose Unsloth quantizazion Q8_K_XL instead of the default Q4_K_XL"
-    echo "  -mtp                Enable multi token prediction (default: disable)"
+    echo "  -8bit               Choose Unsloth quantization Q8_K_XL instead of the default Q4_K_XL"
+    echo "  -mtp                Enable multi token prediction (default: disabled)"
     echo "  -ctx <context>      Context size in tokens (integer, default = 262144)"
+    echo "  -log <file>         Log file for stdout+stderr"
+    echo "                      (default: /var/tmp/llama-server-<timestamp>.log)"
     exit 1
 }
 
 split="layer"
-mtp=""
+mtp=()
 host="0.0.0.0"
 port="8080"
 quant="4"
 context="262144"
+log=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -66,20 +55,23 @@ while [[ $# -gt 0 ]]; do
             ;;
         -8bit)
             quant="8"
-            shift 
+            shift
             ;;
         -ctx)
             context="$2"
             shift 2
             ;;
+        -log)
+            log="$2"
+            shift 2
+            ;;
         -mtp)
-            if [ "$quant" == "4" ]
-            then
-              mtp="-md /models/mtp-Qwen3.8-27B-Q4_0.gguf --spec-type draft-mtp --spec-draft-n-max 5 "
+            if [[ "$quant" == "4" ]]; then
+                mtp=(-md /models/mtp-Qwen3.8-27B-Q4_0.gguf --spec-type draft-mtp --spec-draft-n-max 5)
             else
-              mtp="--spec-type draft-mtp --spec-draft-n-max 5 "
+                mtp=(--spec-type draft-mtp --spec-draft-n-max 5)
             fi
-            shift 1
+            shift
             ;;
         -help)
             usage
@@ -96,14 +88,41 @@ if ! is_valid_split "$split"; then
     usage
 fi
 
+if [[ -z "$log" ]]; then
+    log="/var/tmp/llama-server-$(date +%Y%m%d-%H%M%S).log"
+fi
+
+# il file di log deve essere creabile prima di lanciare in background,
+# altrimenti l'errore si perderebbe
+if ! : >>"$log"; then
+    echo "Error: cannot write log file: $log" >&2
+    exit 1
+fi
+
+if podman container exists "$CONTAINER_NAME"; then
+    echo "Error: container '$CONTAINER_NAME' already exists. Stop it first:" >&2
+    echo "       podman stop $CONTAINER_NAME" >&2
+    exit 1
+fi
+
 echo "Chosen quantization : $quant"
 echo "Chosen model        : Qwen3.8-27B-UD-Q${quant}_K_XL.gguf"
 echo "Context size        : $context"
-echo "Speculative decode  : [$mtp]"
+echo "Speculative decode  : [${mtp[*]-}]"
 echo "Split mode          : $split"
 echo "Endpoint            : ${host}:${port}"
+echo "Log file            : $log"
 
-podman run --rm -it --name llama-cockpit-server-72cb15ef \
+{
+    echo "=== $(date -Is) ==="
+    echo "model=Qwen3.8-27B-UD-Q${quant}_K_XL.gguf ctx=$context split=$split endpoint=${host}:${port}"
+    echo "mtp=[${mtp[*]-}]"
+    echo "==="
+} >>"$log"
+
+# --rm resta valido; -it e' stato rimosso perche' in background non c'e' TTY.
+# nohup + & : il container sopravvive alla chiusura del terminale.
+nohup podman run --rm --name "$CONTAINER_NAME" \
   --device /dev/dri \
   --group-add keep-groups \
   --security-opt seccomp=unconfined \
@@ -111,13 +130,13 @@ podman run --rm -it --name llama-cockpit-server-72cb15ef \
   --userns=keep-id \
   -e XDG_CACHE_HOME=/tmp \
   -v /nvme/gguf:/models:ro \
-  -p ${host}:${port}:${port} \
+  -p "${host}:${port}:${port}" \
   docker.io/kyuz0/intel-b70-ai-toolboxes:sycl \
   llama-server \
-  -m /models/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf $mtp \
-  -c $context \
+  -m "/models/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf" "${mtp[@]-}" \
+  -c "$context" \
   -ngl 999 \
-  --host 0.0.0.0 --port $port \
+  --host 0.0.0.0 --port "$port" \
   --load-mode none \
   -fa 1 \
   --cache-type-k f16 --cache-type-v f16 \
@@ -127,9 +146,26 @@ podman run --rm -it --name llama-cockpit-server-72cb15ef \
   --reasoning on \
   --chat-template-kwargs '{"reasoning_effort":"medium"}' \
   --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0 \
-  --jinja \
   --fit off \
   --cache-ram 0 \
   --chat-template-file /models/qwen3.8-27b.jinja \
-  -sm $split \
-  --metrics
+  -sm "$split" \
+  --metrics \
+  >>"$log" 2>&1 &
+
+pid=$!
+disown "$pid" 2>/dev/null || true
+
+# verifica che non sia morto subito (errori podman/OCI, porta occupata, modello assente)
+sleep 3
+if ! kill -0 "$pid" 2>/dev/null; then
+    echo "" >&2
+    echo "Error: podman terminated immediately. Last lines of $log:" >&2
+    tail -n 25 "$log" >&2
+    exit 1
+fi
+
+echo ""
+echo "Started. podman PID: $pid"
+echo "Follow the log with : tail -f $log"
+echo "Stop the server with: podman stop $CONTAINER_NAME"
