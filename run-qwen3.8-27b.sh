@@ -1,0 +1,131 @@
+#podman run --rm -it --name llama-cockpit-server-72cb15ef --device /dev/dri --group-add keep-groups --security-opt seccomp=unconfined --security-opt label=disable --userns=keep-id -e XDG_CACHE_HOME=/tmp -v /nvme/gguf:/models:ro -p 192.168.1.200:8080:8080 docker.io/kyuz0/intel-b70-ai-toolboxes:sycl llama-server -m /models/Qwen3.8-27B-UD-Q4_K_XL.gguf -c 67840 -ngl 999 --host 0.0.0.0 --port 8080 --load-mode none -fa 1 --cache-type-k f16 --cache-type-v f16 -b 2048 -ub 512 -np 1 --jinja --reasoning on --chat-template-kwargs {"reasoning_effort":"medium"} --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0 --jinja --fit off --cache-ram 0 --spec-type draft-mtp --spec-draft-n-max 3 -dev SYCL0,SYCL1
+
+
+#-dev is not required as llama-server takes by default all GPU podman provides (-dev /dev/dri)
+
+
+#podman run --rm -it --name llama-cockpit-server-72cb15ef --device /dev/dri --group-add keep-groups --security-opt seccomp=unconfined --security-opt label=disable --userns=keep-id -e XDG_CACHE_HOME=/tmp -v /nvme/gguf:/models:ro -p 192.168.1.200:8080:8080 docker.io/kyuz0/intel-b70-ai-toolboxes:sycl llama-server -m /models/Qwen3.8-27B-UD-Q4_K_XL.gguf -c 262144 -ngl 999 --host 0.0.0.0 --port 8080 --load-mode none -fa 1 --cache-type-k f16 --cache-type-v f16 -b 2048 -ub 512 -np 1 --jinja --reasoning on --chat-template-kwargs '{"reasoning_effort":"medium"}' --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0 --jinja --fit off --cache-ram 0 --spec-type draft-mtp --spec-draft-n-max 5 -sm tensor
+  
+# tensor split mode produced 40 tok/s but after a little while 1 GPU hung
+
+VALID_SPLITS=(layer tensor row none)
+
+is_valid_split() {
+    local p
+    for p in "${VALID_SPLITS[@]}"; do
+        [[ "$1" == "$p" ]] && return 0
+    done
+    return 1
+}
+
+is_valid_quant() {
+    local p
+    for p in "4 8"; do
+        [[ "$1" == "$p" ]] && return 0
+    done
+    return 1
+}
+
+usage() {
+    echo "Usage: $0 [options]" >&2
+    echo ""
+    echo "Options:"
+    echo "  --split <splitmode>  Quantization for unsloth (layer | tensor | row | nonw - default: layer)"
+    echo "  --port <number>      Port number (default: 8080)"
+    echo "  --host <address>     Host address (default: 0.0.0.0)"
+    echo "  --quant <4|8>        Choose Unsloth quantizazion (4 or 8 bits, default: 4)"
+    echo "  --mpt                Enable multi token prediction (default: disable)"
+    exit 1
+}
+
+split="layer"
+mtp=""
+host="0.0.0.0"
+port="8080"
+quant="4"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --split)
+            split="$2"
+            shift 2
+            ;;
+        
+        --host)
+            host="$2"
+            shift 2
+            ;;
+        --port)
+            port="$2"
+            shift 2
+            ;;
+        --quant)
+            quant="$2"
+            
+            shift 2
+            ;;
+        --mtp)
+            if ["$quant" == "4"]
+            then
+              mtp="-md /models/mtp-Qwen3.8-27B-Q4_0.gguf --spec-type draft-mtp --spec-draft-n-max 5 "
+            else
+              mtp="--spec-type draft-mtp --spec-draft-n-max 5 "
+            fi
+            shift 1
+            ;;
+        -h|--help)
+            usage
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            usage
+            ;;
+    esac
+done
+
+if ! is_valid_split "$split"; then
+    echo "Error: Invalid split mode: $split" >&2
+    usage
+fi
+
+if ! is_valid_quant "$split"; then
+    echo "Error: Invalid quantization: $quant" >&2
+    usage
+fi
+
+echo "Chosen quantization : $quant"
+echo "Chosen model        : Qwen3.8-27B-UD-Q${quant}_K_XL.gguf"
+echo "Speculative decode  : [$mtp]"
+echo "Split mode          : $split"
+echo "Endpoint            : ${host}:${port}"
+
+podman run --rm -it --name llama-cockpit-server-72cb15ef \
+  --device /dev/dri \
+  --group-add keep-groups \
+  --security-opt seccomp=unconfined \
+  --security-opt label=disable \
+  --userns=keep-id \
+  -e XDG_CACHE_HOME=/tmp \
+  -v /nvme/gguf:/models:ro \
+  -p 192.168.1.200:8080:8080 \
+  docker.io/kyuz0/intel-b70-ai-toolboxes:sycl \
+  llama-server \
+  -m /models/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf $mtp \
+  -c 262144 \
+  -ngl 999 \
+  --host $host --port $port \
+  --load-mode none \
+  -fa 1 \
+  --cache-type-k f16 --cache-type-v f16 \
+  -b 2048 -ub 512 \
+  -np 1 \
+  --jinja \
+  --reasoning on \
+  --chat-template-kwargs '{"reasoning_effort":"medium"}' \
+  --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0 \
+  --jinja \
+  --fit off \
+  --cache-ram 0 \
+  --chat-template-file /models/qwen3.8-27b.jinja \
+  -sm layer \
+  --metrics
