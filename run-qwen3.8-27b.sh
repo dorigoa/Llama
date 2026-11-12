@@ -39,6 +39,7 @@ usage() {
     echo "  -host <address>     Host address (default: 0.0.0.0)"
     echo "  -8bit               Choose Unsloth quantizazion Q8_K_XL instead of the default Q4_K_XL"
     echo "  -mtp                Enable multi token prediction (default: disable)"
+    echo "  -ctx <context>      Context size in tokens (integer, default = 262144)"
     exit 1
 }
 
@@ -47,6 +48,7 @@ mtp=""
 host="0.0.0.0"
 port="8080"
 quant="4"
+context="262144"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -65,6 +67,10 @@ while [[ $# -gt 0 ]]; do
         -8bit)
             quant="8"
             shift 
+            ;;
+        -ctx)
+            context="$2"
+            shift 2
             ;;
         -mtp)
             if [ "$quant" == "4" ]
