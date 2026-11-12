@@ -50,7 +50,6 @@ while [[ $# -gt 0 ]]; do
             split="$2"
             shift 2
             ;;
-        
         --host)
             host="$2"
             shift 2
