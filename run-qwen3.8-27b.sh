@@ -64,7 +64,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         -8bit)
             quant="8"
-            shift 2
+            shift 
             ;;
         -mtp)
             if ["$quant" == "4"]
