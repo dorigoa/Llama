@@ -1,3 +1,23 @@
+## Notes on installation for SYCL (Intel ARC B70) on Ubuntu 26.10
+For llama.cpp (1.0.0) download as pre-built binaries, ubuntu 26.10, SVML is required; we will install the openAPI stack:
+```
+wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+  | sudo gpg --dearmor -o /usr/share/keyrings/oneapi-archive-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
+  | sudo tee /etc/apt/sources.list.d/oneAPI.list
+
+sudo apt update
+
+sudo apt install intel-oneapi-runtime-libs
+
+ldconfig -p | grep libsvml
+
+ldd <path>/llama-server -h
+```
+
+Checked that after installing libraries system-wide, strata still works.
+
 ## Test to get stats
 
 ```bash
