@@ -18,6 +18,29 @@ ldd <path>/llama-server -h
 
 Checked that after installing libraries system-wide, strata still works.
 
+## Run Qwen3.8-Flash-Next Q4
+Downloaded UD-IQ4_XS (v3.1) from `https://huggingface.co/unsloth/Qwen3.8-Flash-Next-GGUF?show_file_info=UD-IQ4_XS%2FQwen3.8-Flash-Next-UD-IQ4_XS-00001-of-00004.gguf` (one of them is the quantised n-gram dictionary). MTP is embedded, but can also use an external one (see below).
+Options:
+```
+-ot "ple_ngram_embd=CPU,per_layer_token_embd=CPU"
+
+--n-cpu-moe N 
+
+--load-mode none --fit off # on mixed env it makes mistakes istimating the distribution
+
+-ngl 99 --split-mode layer --tensor-split 1,1
+
+-fa on -ctk q8_0 -ctv q8_0
+
+-c 65536 per iniziare --no-context-shift, --parallel 1
+
+-b 4096 -ub 2048 # Costa VRAM
+
+-md mtp-Qwen3.8-Flash-Next-shared-Q8_0.gguf --spec-type draft-mtp --spec-draft-n-max 2
+
+--temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --jinja --metrics
+```
+
 ## Test to get stats
 
 ```bash
