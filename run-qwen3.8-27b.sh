@@ -122,6 +122,7 @@ echo "Log file            : $log"
 
 # --rm resta valido; -it e' stato rimosso perche' in background non c'e' TTY.
 # nohup + & : il container sopravvive alla chiusura del terminale.
+#ONEAPI_DEVICE_SELECTOR=level_zero:*
 nohup podman run --rm --name "$CONTAINER_NAME" \
   --device /dev/dri \
   --group-add keep-groups \
