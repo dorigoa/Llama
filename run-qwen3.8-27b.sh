@@ -158,7 +158,10 @@ echo "Log file            : $log"
 #   --metrics \
 #   >>"$log" 2>&1 &
 
-source /opt/intel/oneapi/setvars.sh
+set +eu
+source /opt/intel/oneapi/setvars.sh --force
+set -eu
+#source /opt/intel/oneapi/setvars.sh
 
 ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
    -m /nvme/gguf/Qwen3.8-27B-UD-Q8_K_XL.gguf $mtp \
