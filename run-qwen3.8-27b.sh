@@ -183,7 +183,7 @@ ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
    --chat-template-file /nvme/gguf/qwen3.8-27b.jinja \
    -sm layer \
    --metrics \
-   >"$log" 2>&1 &
+   >>"$log" 2>&1 &
 
 
 # pid=$!
