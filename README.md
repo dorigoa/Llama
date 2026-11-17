@@ -19,7 +19,7 @@ ldd <path>/llama-server -h
 ## Test to get stats
 
 ```bash
-curl -s http://localhost:8080/v1/chat/completions   -H 'Content-Type: application/json'   -d '{"messages":[{"role":"user","content":"Spiegami la relatività ristretta in 600 parole"}],"max_tokens":1000}'   | jq .timings
+curl -s http://localhost:8080/v1/chat/completions   -H 'Content-Type: application/json'   -d '{"messages":[{"role":"user","content":"Spiegami la relatività ristretta in circa 600 parole"}],"max_tokens":1000}'   | jq .timings
 ```
 ## Stress test
 ```bash
