@@ -23,7 +23,7 @@ usage() {
     #echo "  -split <splitmode>  Split mode (layer | tensor | row | none - default: layer)"
     echo "  -port <number>       Port number (default: 8080)"
     echo "  -host <address>      Host address (default: 0.0.0.0)"
-    #echo "  -8bit              Choose Unsloth quantization Q8_K_XL instead of the default Q4_K_XL"
+    echo "  -4bit                Choose Unsloth quantization Q4_K_XL instead of the default Q4_K_XL"
     echo "  -no-mtp              Disable multi token prediction (default: enabled)"
     echo "  -ctx <context>       Context size in tokens (integer, default = 262144)"
     echo "  -log <file>          Log file for stdout+stderr"
@@ -37,10 +37,11 @@ split="layer"
 mtp="--spec-type draft-mtp --spec-draft-n-max 5"
 host="0.0.0.0"
 port="8080"
-quant="4"
+quant="8"
 context="262144"
 log="./llama-server-$(date +%Y%m%d-%H%M%S).log"
 llama="/opt/llama.cpp/llama-server"
+gguf_prefix="/nvme/gguf"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -56,10 +57,11 @@ while [[ $# -gt 0 ]]; do
             port="$2"
             shift 2
             ;;
-        # -8bit)
-        #     quant="8"
-        #     shift
-        #     ;;
+        -4bit)
+            quant="4"
+            mtp="--spec-type draft-mtp --spec-draft-n-max 5 -md ${gguf_prefix}/qwen3.8/mtp-Qwen3.8-27B-Q4_0.gguf"
+            shift 2
+            ;;
         -ctx)
             context="$2"
             shift 2
@@ -110,7 +112,7 @@ fi
 # fi
 
 # echo "Chosen quantization : $quant"
-echo "Chosen model        : Qwen3.8-27B-UD-Q8_K_XL.gguf"
+echo "Chosen model        : Qwen3.8-27B-UD-Q${quant}_K_XL.gguf"
 echo "Context size        : $context"
 echo "Speculative decode  : [$mtp]"
 # echo "Split mode          : $split"
@@ -119,7 +121,9 @@ echo "Log file            : $log"
 
 {
     echo "=== $(date -Is) ==="
-    echo "model=Qwen3.8-27B-UD-Q8_K_XL.gguf ctx=$context endpoint=${host}:${port}"
+    echo "model=Qwen3.8-27B-UD-Q${quant}_K_XL.gguf 
+    echo "ctx=$context"
+    echo "endpoint=${host}:${port}"
     echo "mtp=[$mtp]"
     echo "==="
 } >>"$log"
@@ -163,7 +167,7 @@ source /opt/intel/oneapi/setvars.sh --force
 set -eu
 
 ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
-   -m /nvme/gguf/qwen3.8/Qwen3.8-27B-UD-Q8_K_XL.gguf $mtp \
+   -m ${gguf_prefix}/qwen3.8/Qwen3.8-27B-UD-Q8_K_XL.gguf $mtp \
    -c "$context" \
    -ngl 999 \
    --host ${host} --port "$port" \
@@ -179,7 +183,7 @@ ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
    --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0 \
    --fit off \
    --cache-ram 0 \
-   --chat-template-file /nvme/gguf/qwen3.8/qwen3.8-27b.jinja \
+   --chat-template-file ${gguf_prefix}/qwen3.8/qwen3.8-27b.jinja \
    -sm layer \
    --metrics \
    >>"$log" 2>&1 &
@@ -200,4 +204,4 @@ ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
 # echo ""
 # echo "Started. podman PID: $pid"
 # echo "Follow the log with : tail -f $log"
-echo "Stop the server with: podman stop $CONTAINER_NAME"
+#echo "Stop the server with: podman stop $CONTAINER_NAME"
