@@ -158,7 +158,9 @@ echo "Log file            : $log"
 #   --metrics \
 #   >>"$log" 2>&1 &
 
-#source /opt/intel/oneapi/setvars.sh
+set +eu
+source /opt/intel/oneapi/setvars.sh --force
+set -eu
 
 ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
    -m /nvme/gguf/Qwen3.8-27B-UD-Q8_K_XL.gguf $mtp \
@@ -180,7 +182,7 @@ ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
    --chat-template-file /nvme/gguf/qwen3.8-27b.jinja \
    -sm layer \
    --metrics \
-   >"$log" 2>&1 &
+   >>"$log" 2>&1 &
 
 
 # pid=$!
