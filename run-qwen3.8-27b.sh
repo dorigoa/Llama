@@ -111,6 +111,8 @@ fi
 #     exit 1
 # fi
 
+model="${gguf_prefix}/qwen3.8/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf"
+
 # echo "Chosen quantization : $quant"
 echo "Chosen model        : Qwen3.8-27B-UD-Q${quant}_K_XL.gguf"
 echo "Context size        : $context"
@@ -158,10 +160,10 @@ source /opt/intel/oneapi/setvars.sh --force
 set -eu
 
 ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
-   -m ${gguf_prefix}/qwen3.8/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf $mtp \
+   -m $model $mtp \
    -c "$context" \
    -ngl 999 \
-   --host ${host} --port "$port" \
+   --host $host --port "$port" \
    --load-mode none \
    -fa 1 \
    --cache-type-k f16 --cache-type-v f16 \
