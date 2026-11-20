@@ -119,15 +119,6 @@ echo "Speculative decode  : [$mtp]"
 echo "Endpoint            : ${host}:${port}"
 echo "Log file            : $log"
 
-{
-    echo "=== $(date -Is) ==="
-    echo "model=Qwen3.8-27B-UD-Q${quant}_K_XL.gguf 
-    echo "ctx=$context"
-    echo "endpoint=${host}:${port}"
-    echo "mtp=[$mtp]"
-    echo "==="
-} >>"$log"
-
 # --rm resta valido; -it e' stato rimosso perche' in background non c'e' TTY.
 # nohup + & : il container sopravvive alla chiusura del terminale.
 #ONEAPI_DEVICE_SELECTOR=level_zero:*
