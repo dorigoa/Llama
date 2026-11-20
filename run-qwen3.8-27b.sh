@@ -23,7 +23,7 @@ usage() {
     #echo "  -split <splitmode>  Split mode (layer | tensor | row | none - default: layer)"
     echo "  -port <number>       Port number (default: 8080)"
     echo "  -host <address>      Host address (default: 0.0.0.0)"
-    echo "  -4bit                Choose Unsloth quantization Q4_K_XL instead of the default Q4_K_XL"
+    echo "  -4bit                Choose Unsloth quantization Q4_K_XL instead of the default Q8_K_XL"
     echo "  -no-mtp              Disable multi token prediction (default: enabled)"
     echo "  -ctx <context>       Context size in tokens (integer, default = 262144)"
     echo "  -log <file>          Log file for stdout+stderr"
