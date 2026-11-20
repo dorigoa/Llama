@@ -193,7 +193,7 @@ ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
    --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0 \
    --fit off \
    --cache-ram 0 \
-   --chat-template-file ${gguf_prefix}/gemma-4-31b/gemma-4-31b.jinja \
+   --chat-template-file ${gguf_prefix}/gemma-4/gemma-4-31b.jinja \
    -sm layer \
    --metrics \
    >>"$log" 2>&1 &
