@@ -60,7 +60,7 @@ while [[ $# -gt 0 ]]; do
         -4bit)
             quant="4"
             mtp="--spec-type draft-mtp --spec-draft-n-max 5 -md ${gguf_prefix}/qwen3.8/mtp-Qwen3.8-27B-Q4_0.gguf"
-            shift 2
+            shift 1
             ;;
         -ctx)
             context="$2"
