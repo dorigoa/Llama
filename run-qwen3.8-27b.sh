@@ -163,7 +163,7 @@ source /opt/intel/oneapi/setvars.sh --force
 set -eu
 
 ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
-   -m /nvme/gguf/Qwen3.8-27B-UD-Q8_K_XL.gguf $mtp \
+   -m /nvme/gguf/qwen3.8/Qwen3.8-27B-UD-Q8_K_XL.gguf $mtp \
    -c "$context" \
    -ngl 999 \
    --host ${host} --port "$port" \
