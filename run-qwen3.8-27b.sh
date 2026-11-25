@@ -112,6 +112,7 @@ source /opt/intel/oneapi/setvars.sh --force
 set -eu
 
 ONEAPI_DEVICE_SELECTOR=level_zero:* GGML_SYCL_DEV2DEV_MEMCPY=2 $llama \
+   -dev SYCL0,SYCL1 \
    -m $model $mtp \
    -c "$context" \
    -ngl 999 \
