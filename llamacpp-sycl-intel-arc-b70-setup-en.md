@@ -1,7 +1,9 @@
 # llama.cpp SYCL on 2× Intel Arc Pro B70 (Ubuntu 26) — runtime setup and troubleshooting
 
-Date: 2026-11-10 — llama.cpp build b12246 (prebuilt release "Ubuntu x64 SYCL FP16")
 GPUs: 2× Arc Pro B70 32 GB (PCI ID 0xe223, BMG-G31) — host 192.168.1.200 — kernel 7.0.0-43-generic
+
+## Important NOTE (!)
+We found that running periodically a script (like `telegraf` does) that interrogates the GPU for % usage, temperature, power, etc. can disrupt the maximum performance, up to generating timeout in the GPU. This can be recovered by a good inference engine (but not when squeezing every single gpu cycle with MTP and/or tensor split), but cannot be recovered during 3D heavy gaming.
 
 ## Backend choice
 
