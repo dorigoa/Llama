@@ -19,9 +19,20 @@ ldd <path>/llama-server -h
 ## Test to get stats
 
 ```bash
-time curl -s http://192.168.1.101:8080/v1/chat/completions   -H 'Content-Type: application/json'   -d '{"model":"mlx-community/Qwen3.8-27B-4bit",
-       "messages":[{"role":"user","content":"Spiegami la relatività ristretta in circa 400 parole"}],
-       "max_tokens":1000}' | jq .timings
+#time curl -s http://192.168.1.101:8080/v1/chat/completions   -H 'Content-Type: application/json'   -d '{"model":"mlx-community/Qwen3.8-27B-4bit",
+#       "messages":[{"role":"user","content":"Spiegami la relatività ristretta in circa 400 parole"}],
+#       "max_tokens":1000}' | jq .timings
+
+curl -s http://192.168.1.101:8000/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"mlx-community/Qwen3.8-27B-4bit",
+       "messages":[{"role":"user","content":"Scrivi una novella di 500 parole."}],
+       "max_tokens":4000}' | \
+  jq '{
+    tok_s:            (.timings.predicted_per_second * 100 | round) / 100,
+    draft_accept_pct: (.timings.draft_n_accepted / .timings.draft_n * 100 | round * 100) / 100
+  }'
+
 ```
 ## Stress test
 To stress the prefill (prompt full) use the `ctx-stress.py` script:
