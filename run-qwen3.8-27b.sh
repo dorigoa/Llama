@@ -24,6 +24,7 @@ usage() {
     echo "  -port <number>       Port number (default: 8080)"
     echo "  -host <address>      Host address (default: 0.0.0.0)"
     echo "  -4bit                Choose Unsloth quantization Q4_K_XL instead of the default Q8_K_XL"
+    echo "  -kv8                 Chose 8 bits quantization for KV cache"
     echo "  -no-mtp              Disable multi token prediction (default: enabled)"
     echo "  -ctx <context>       Context size in tokens (integer, default = 262144)"
     echo "  -log <file>          Log file for stdout+stderr"
@@ -42,6 +43,8 @@ context="262144"
 log="./llama-server-$(date +%Y%m%d-%H%M%S).log"
 llama="/opt/llama.cpp/llama-server"
 gguf_prefix="/nvme/gguf"
+kq="f16"
+vq="f16"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -60,6 +63,11 @@ while [[ $# -gt 0 ]]; do
         -4bit)
             quant="4"
             mtp="--spec-type draft-mtp --spec-draft-n-max 5 -md ${gguf_prefix}/qwen3.8/mtp-Qwen3.8-27B-Q4_0.gguf"
+            shift 1
+            ;;
+        -kv8)
+            kq="q8_0"
+            vq="q8_0"
             shift 1
             ;;
         -ctx)
@@ -161,8 +169,8 @@ ONEAPI_DEVICE_SELECTOR=level_zero:* GGML_SYCL_DEV2DEV_MEMCPY=2 $llama \
    --host $host --port "$port" \
    --load-mode none \
    -fa 1 \
-   --cache-type-k f16 --cache-type-v f16 \
-   -b 2048 -ub 512 \
+   --cache-type-k $kq --cache-type-v $vq \
+   -b 2048 -ub 1024 \
    -np 1 \
    --jinja \
    --reasoning on \
