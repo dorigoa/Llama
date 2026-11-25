@@ -1,3 +1,10 @@
+## Working configuration
+
+- OS: Ubuntu 26.10
+- Kernel: 7.3.0-11-generic
+- firmware GuC: linux-firmware-intel-graphics_20260319
+- llama.cpp: Officiale release 1.0.0
+
 ## Notes on installation for SYCL (Intel ARC B70) on Ubuntu 26.10
 For llama.cpp (1.0.0) download as pre-built binaries, ubuntu 26.10, SVML is required; we will install the openAPI stack:
 ```
