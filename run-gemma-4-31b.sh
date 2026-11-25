@@ -38,7 +38,7 @@ context="262144"
 log="./llama-server-$(date +%Y%m%d-%H%M%S).log"
 llama="/opt/llama.cpp/llama-server"
 gguf_prefix="/nvme/gguf"
-mtp="--spec-type draft-mtp --spec-draft-n-max 5 -md ${gguf_prefix}/gemma-4/mtp-gemma-4-31B-it-Q8_0.gguf"
+mtp="--spec-type draft-mtp --spec-draft-n-max 3 -md ${gguf_prefix}/gemma-4/mtp-gemma-4-31B-it-Q8_0.gguf"
 kq="f16"
 vq="f16"
 while [[ $# -gt 0 ]]; do
@@ -57,7 +57,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         -qat4bit)
             quant="qat-UD-Q4_K_XL"
-            mtp="--spec-type draft-mtp --spec-draft-n-max 5 -md ${gguf_prefix}/gemma-4/mtp-gemma-4-31B-it-Q4_0.gguf"
+            mtp="--spec-type draft-mtp --spec-draft-n-max 3 -md ${gguf_prefix}/gemma-4/mtp-gemma-4-31B-it-Q4_0.gguf"
             shift 1
             ;;
         -kv8)
