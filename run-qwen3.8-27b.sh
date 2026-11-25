@@ -2,11 +2,7 @@
 
 set -euo pipefail
 
-# tensor split mode produced 40 tok/s but after a little while 1 GPU hung
-# -dev is not required as llama-server takes by default all GPU podman provides (-dev /dev/dri)
-
 VALID_SPLITS=(layer tensor row none)
-# CONTAINER_NAME="llama-cockpit-server-72cb15ef"
 
 is_valid_split() {
     local p
@@ -97,66 +93,19 @@ if ! is_valid_split "$split"; then
     usage
 fi
 
-# if [[ -z "$log" ]]; then
-#     log="/tmp/llama-server-$(date +%Y%m%d-%H%M%S).log"
-# fi
-
-# il file di log deve essere creabile prima di lanciare in background,
-# altrimenti l'errore si perderebbe
 if ! : >>"$log"; then
     echo "Error: cannot write log file: $log" >&2
     exit 1
 fi
 
-# if podman container exists "$CONTAINER_NAME"; then
-#     echo "Error: container '$CONTAINER_NAME' already exists. Stop it first:" >&2
-#     echo "       podman stop $CONTAINER_NAME" >&2
-#     exit 1
-# fi
-
 model="${gguf_prefix}/qwen3.8/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf"
 
-# echo "Chosen quantization : $quant"
 echo "Chosen model        : Qwen3.8-27B-UD-Q${quant}_K_XL.gguf"
 echo "Context size        : $context"
 echo "Speculative decode  : [$mtp]"
 echo "Split mode          : $split"
 echo "Endpoint            : ${host}:${port}"
 echo "Log file            : $log"
-
-# --rm resta valido; -it e' stato rimosso perche' in background non c'e' TTY.
-# nohup + & : il container sopravvive alla chiusura del terminale.
-#ONEAPI_DEVICE_SELECTOR=level_zero:*
-# nohup podman run --rm --name "$CONTAINER_NAME" \
-#   --device /dev/dri \
-#   --group-add keep-groups \
-#   --security-opt seccomp=unconfined \
-#   --security-opt label=disable \
-#   --userns=keep-id \
-#   -e XDG_CACHE_HOME=/tmp \
-#   -v /nvme/gguf:/models:ro \
-#   -p "${host}:${port}:${port}" \
-#   docker.io/kyuz0/intel-b70-ai-toolboxes:sycl \
-#   llama-server \
-#   -m /models/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf $mtp \
-#   -c "$context" \
-#   -ngl 999 \
-#   --host 0.0.0.0 --port "$port" \
-#   --load-mode none \
-#   -fa 1 \
-#   --cache-type-k f16 --cache-type-v f16 \
-#   -b 2048 -ub 512 \
-#   -np 1 \
-#   --jinja \
-#   --reasoning on \
-#   --chat-template-kwargs '{"reasoning_effort":"medium"}' \
-#   --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0 \
-#   --fit off \
-#   --cache-ram 0 \
-#   --chat-template-file /models/qwen3.8-27b.jinja \
-#   -sm "$split" \
-#   --metrics \
-#   >>"$log" 2>&1 &
 
 set +eu
 source /opt/intel/oneapi/setvars.sh --force
@@ -182,21 +131,3 @@ ONEAPI_DEVICE_SELECTOR=level_zero:* GGML_SYCL_DEV2DEV_MEMCPY=2 $llama \
    -sm ${split} \
    --metrics \
    >>"$log" 2>&1 &
-
-
-# pid=$!
-# disown "$pid" 2>/dev/null || true
-
-# # verifica che non sia morto subito (errori podman/OCI, porta occupata, modello assente)
-# sleep 3
-# if ! kill -0 "$pid" 2>/dev/null; then
-#     echo "" >&2
-#     echo "Error: podman terminated immediately. Last lines of $log:" >&2
-#     tail -n 25 "$log" >&2
-#     exit 1
-# fi
-
-# echo ""
-# echo "Started. podman PID: $pid"
-# echo "Follow the log with : tail -f $log"
-#echo "Stop the server with: podman stop $CONTAINER_NAME"
