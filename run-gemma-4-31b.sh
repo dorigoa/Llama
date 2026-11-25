@@ -1,20 +1,3 @@
-# /opt/llama.cpp/llama-server \
-#   -a 'Gemma-4-31B-it-qat-ud-q4_k_xl' \
-#   -m /nvme/gguf/Gemma-4-31B-it/gemma-4-31B-it-qat-UD-Q4_K_XL.gguf \
-#   -md /nvme/gguf/Gemma-4-31B-it/mtp-gemma-4-31B-it-Q8_0.gguf \
-#   --chat-template-file /nvme/gguf/Gemma-4-31B-it/chat-template.jinja \
-#   -ts 1,1 \
-#   -c 150000 -ctk q8_0 -ctv q8_0 \
-#   -fa on \
-#   --jinja \
-#   -lv 4 --log-file /var/log/llama-server.out \
-#   --spec-type draft-mtp --spec-draft-n-max 3 \
-#   -np 1 \
-#   -sm tensor \
-#   --no-mmproj-offload \
-#   -ngl 999 \
-#   --host 192.168.1.200 --port 8080
-
 #!/bin/bash
 
 set -euo pipefail
@@ -22,22 +5,22 @@ set -euo pipefail
 # tensor split mode produced 40 tok/s but after a little while 1 GPU hung
 # -dev is not required as llama-server takes by default all GPU podman provides (-dev /dev/dri)
 
-# VALID_SPLITS=(layer tensor row none)
+VALID_SPLITS=(layer tensor row none)
 # CONTAINER_NAME="llama-cockpit-server-72cb15ef"
 
-# is_valid_split() {
-#     local p
-#     for p in "${VALID_SPLITS[@]}"; do
-#         [[ "$1" == "$p" ]] && return 0
-#     done
-#     return 1
-# }
+is_valid_split() {
+    local p
+    for p in "${VALID_SPLITS[@]}"; do
+        [[ "$1" == "$p" ]] && return 0
+    done
+    return 1
+}
 
 usage() {
     echo "Usage: $0 [options]" >&2
     echo ""
     echo "Options:"
-    #echo "  -split <splitmode>  Split mode (layer | tensor | row | none - default: layer)"
+    echo "  -split <splitmode>   Split mode (layer | tensor | row | none - default: layer)"
     echo "  -port <number>       Port number (default: 8080)"
     echo "  -host <address>      Host address (default: 0.0.0.0)"
     echo "  -qat4bit             Choose Unsloth quantization qat-UD-Q4 instead of the default Q8_K_XL"
@@ -51,7 +34,6 @@ usage() {
 }
 
 split="layer"
-
 host="0.0.0.0"
 port="8080"
 quant="UD-Q8_K_XL"
@@ -63,10 +45,10 @@ mtp="--spec-type draft-mtp --spec-draft-n-max 5 -md ${gguf_prefix}/gemma-4/mtp-g
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        # -split)
-        #     split="$2"
-        #     shift 2
-        #     ;;
+        -split)
+            split="$2"
+            shift 2
+            ;;
         -host)
             host="$2"
             shift 2
@@ -89,11 +71,6 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -no-mtp)
-            # if [[ "$quant" == "4" ]]; then
-            #     mtp="-md /models/mtp-Qwen3.8-27B-Q4_0.gguf --spec-type draft-mtp --spec-draft-n-max 5"
-            # else
-            #     mtp="--spec-type draft-mtp --spec-draft-n-max 5"
-            # fi
             mtp=""
             shift
             ;;
@@ -107,10 +84,10 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# if ! is_valid_split "$split"; then
-#     echo "Error: Invalid split mode: $split" >&2
-#     usage
-# fi
+if ! is_valid_split "$split"; then
+    echo "Error: Invalid split mode: $split" >&2
+    usage
+fi
 
 # if [[ -z "$log" ]]; then
 #     log="/tmp/llama-server-$(date +%Y%m%d-%H%M%S).log"
@@ -135,44 +112,9 @@ model="${gguf_prefix}/gemma-4/gemma-4-31B-it-${quant}.gguf"
 echo "Chosen model        : gemma-4-31B-it-${quant}.gguf"
 echo "Context size        : $context"
 echo "Speculative decode  : [$mtp]"
-# echo "Split mode          : $split"
+echo "Split mode          : $split"
 echo "Endpoint            : ${host}:${port}"
 echo "Log file            : $log"
-
-# --rm resta valido; -it e' stato rimosso perche' in background non c'e' TTY.
-# nohup + & : il container sopravvive alla chiusura del terminale.
-#ONEAPI_DEVICE_SELECTOR=level_zero:*
-# nohup podman run --rm --name "$CONTAINER_NAME" \
-#   --device /dev/dri \
-#   --group-add keep-groups \
-#   --security-opt seccomp=unconfined \
-#   --security-opt label=disable \
-#   --userns=keep-id \
-#   -e XDG_CACHE_HOME=/tmp \
-#   -v /nvme/gguf:/models:ro \
-#   -p "${host}:${port}:${port}" \
-#   docker.io/kyuz0/intel-b70-ai-toolboxes:sycl \
-#   llama-server \
-#   -m /models/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf $mtp \
-#   -c "$context" \
-#   -ngl 999 \
-#   --host 0.0.0.0 --port "$port" \
-#   --load-mode none \
-#   -fa 1 \
-#   --cache-type-k f16 --cache-type-v f16 \
-#   -b 2048 -ub 512 \
-#   -np 1 \
-#   --jinja \
-#   --reasoning on \
-#   --chat-template-kwargs '{"reasoning_effort":"medium"}' \
-#   --temp 1.0 --top-p 0.95 --top-k 20 --min-p 0.0 --presence-penalty 0.0 --repeat-penalty 1.0 \
-#   --fit off \
-#   --cache-ram 0 \
-#   --chat-template-file /models/qwen3.8-27b.jinja \
-#   -sm "$split" \
-#   --metrics \
-#   >>"$log" 2>&1 &
-
 set +eu
 source /opt/intel/oneapi/setvars.sh --force
 set -eu
@@ -194,24 +136,6 @@ ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
    --fit off \
    --cache-ram 0 \
    --chat-template-file ${gguf_prefix}/gemma-4/gemma-4-31b.jinja \
-   -sm layer \
+   -sm ${split} \
    --metrics \
    >>"$log" 2>&1 &
-
-
-# pid=$!
-# disown "$pid" 2>/dev/null || true
-
-# # verifica che non sia morto subito (errori podman/OCI, porta occupata, modello assente)
-# sleep 3
-# if ! kill -0 "$pid" 2>/dev/null; then
-#     echo "" >&2
-#     echo "Error: podman terminated immediately. Last lines of $log:" >&2
-#     tail -n 25 "$log" >&2
-#     exit 1
-# fi
-
-# echo ""
-# echo "Started. podman PID: $pid"
-# echo "Follow the log with : tail -f $log"
-#echo "Stop the server with: podman stop $CONTAINER_NAME"
