@@ -5,22 +5,22 @@ set -euo pipefail
 # tensor split mode produced 40 tok/s but after a little while 1 GPU hung
 # -dev is not required as llama-server takes by default all GPU podman provides (-dev /dev/dri)
 
-# VALID_SPLITS=(layer tensor row none)
+VALID_SPLITS=(layer tensor row none)
 # CONTAINER_NAME="llama-cockpit-server-72cb15ef"
 
-# is_valid_split() {
-#     local p
-#     for p in "${VALID_SPLITS[@]}"; do
-#         [[ "$1" == "$p" ]] && return 0
-#     done
-#     return 1
-# }
+is_valid_split() {
+    local p
+    for p in "${VALID_SPLITS[@]}"; do
+        [[ "$1" == "$p" ]] && return 0
+    done
+    return 1
+}
 
 usage() {
     echo "Usage: $0 [options]" >&2
     echo ""
     echo "Options:"
-    #echo "  -split <splitmode>  Split mode (layer | tensor | row | none - default: layer)"
+    echo "  -split <splitmode>   Split mode (layer | tensor | row | none - default: layer)"
     echo "  -port <number>       Port number (default: 8080)"
     echo "  -host <address>      Host address (default: 0.0.0.0)"
     echo "  -4bit                Choose Unsloth quantization Q4_K_XL instead of the default Q8_K_XL"
@@ -45,10 +45,10 @@ gguf_prefix="/nvme/gguf"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        # -split)
-        #     split="$2"
-        #     shift 2
-        #     ;;
+        -split)
+            split="$2"
+            shift 2
+            ;;
         -host)
             host="$2"
             shift 2
@@ -71,11 +71,6 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -no-mtp)
-            # if [[ "$quant" == "4" ]]; then
-            #     mtp="-md /models/mtp-Qwen3.8-27B-Q4_0.gguf --spec-type draft-mtp --spec-draft-n-max 5"
-            # else
-            #     mtp="--spec-type draft-mtp --spec-draft-n-max 5"
-            # fi
             mtp=""
             shift
             ;;
@@ -89,10 +84,10 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# if ! is_valid_split "$split"; then
-#     echo "Error: Invalid split mode: $split" >&2
-#     usage
-# fi
+if ! is_valid_split "$split"; then
+    echo "Error: Invalid split mode: $split" >&2
+    usage
+fi
 
 # if [[ -z "$log" ]]; then
 #     log="/tmp/llama-server-$(date +%Y%m%d-%H%M%S).log"
@@ -117,7 +112,7 @@ model="${gguf_prefix}/qwen3.8/Qwen3.8-27B-UD-Q${quant}_K_XL.gguf"
 echo "Chosen model        : Qwen3.8-27B-UD-Q${quant}_K_XL.gguf"
 echo "Context size        : $context"
 echo "Speculative decode  : [$mtp]"
-# echo "Split mode          : $split"
+echo "Split mode          : $split"
 echo "Endpoint            : ${host}:${port}"
 echo "Log file            : $log"
 
@@ -159,7 +154,7 @@ set +eu
 source /opt/intel/oneapi/setvars.sh --force
 set -eu
 
-ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
+ONEAPI_DEVICE_SELECTOR=level_zero:* GGML_SYCL_DEV2DEV_MEMCPY=2 $llama \
    -m $model $mtp \
    -c "$context" \
    -ngl 999 \
@@ -176,7 +171,7 @@ ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
    --fit off \
    --cache-ram 0 \
    --chat-template-file ${gguf_prefix}/qwen3.8/qwen3.8-27b.jinja \
-   -sm layer \
+   -sm ${split} \
    --metrics \
    >>"$log" 2>&1 &
 
