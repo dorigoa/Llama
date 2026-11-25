@@ -2,11 +2,7 @@
 
 set -euo pipefail
 
-# tensor split mode produced 40 tok/s but after a little while 1 GPU hung
-# -dev is not required as llama-server takes by default all GPU podman provides (-dev /dev/dri)
-
 VALID_SPLITS=(layer tensor row none)
-# CONTAINER_NAME="llama-cockpit-server-72cb15ef"
 
 is_valid_split() {
     local p
@@ -24,6 +20,7 @@ usage() {
     echo "  -port <number>       Port number (default: 8080)"
     echo "  -host <address>      Host address (default: 0.0.0.0)"
     echo "  -qat4bit             Choose Unsloth quantization qat-UD-Q4 instead of the default Q8_K_XL"
+    echo "  -kv8                 Chose 8 bits quantization for KV cache"
     echo "  -no-mtp              Disable multi token prediction (default: enabled)"
     echo "  -ctx <context>       Context size in tokens (integer, default = 262144)"
     echo "  -log <file>          Log file for stdout+stderr"
@@ -42,7 +39,8 @@ log="./llama-server-$(date +%Y%m%d-%H%M%S).log"
 llama="/opt/llama.cpp/llama-server"
 gguf_prefix="/nvme/gguf"
 mtp="--spec-type draft-mtp --spec-draft-n-max 5 -md ${gguf_prefix}/gemma-4/mtp-gemma-4-31B-it-Q8_0.gguf"
-
+kq="f16"
+vq="f16"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -split)
@@ -60,6 +58,11 @@ while [[ $# -gt 0 ]]; do
         -qat4bit)
             quant="qat-UD-Q4_K_XL"
             mtp="--spec-type draft-mtp --spec-draft-n-max 5 -md ${gguf_prefix}/gemma-4/mtp-gemma-4-31B-it-Q4_0.gguf"
+            shift 1
+            ;;
+        -kv8)
+            kq="q8_0"
+            vq="q8_0"
             shift 1
             ;;
         -ctx)
@@ -89,32 +92,20 @@ if ! is_valid_split "$split"; then
     usage
 fi
 
-# if [[ -z "$log" ]]; then
-#     log="/tmp/llama-server-$(date +%Y%m%d-%H%M%S).log"
-# fi
-
-# il file di log deve essere creabile prima di lanciare in background,
-# altrimenti l'errore si perderebbe
 if ! : >>"$log"; then
     echo "Error: cannot write log file: $log" >&2
     exit 1
 fi
 
-# if podman container exists "$CONTAINER_NAME"; then
-#     echo "Error: container '$CONTAINER_NAME' already exists. Stop it first:" >&2
-#     echo "       podman stop $CONTAINER_NAME" >&2
-#     exit 1
-# fi
-
 model="${gguf_prefix}/gemma-4/gemma-4-31B-it-${quant}.gguf"
 
-# echo "Chosen quantization : $quant"
 echo "Chosen model        : gemma-4-31B-it-${quant}.gguf"
 echo "Context size        : $context"
 echo "Speculative decode  : [$mtp]"
 echo "Split mode          : $split"
 echo "Endpoint            : ${host}:${port}"
 echo "Log file            : $log"
+
 set +eu
 source /opt/intel/oneapi/setvars.sh --force
 set -eu
@@ -126,8 +117,8 @@ ONEAPI_DEVICE_SELECTOR=level_zero:* $llama \
    --host $host --port "$port" \
    --load-mode none \
    -fa 1 \
-   --cache-type-k f16 --cache-type-v f16 \
-   -b 2048 -ub 512 \
+   --cache-type-k $kq --cache-type-v $vq \
+   -b 2048 -ub 1024 \
    -np 1 \
    --jinja \
    --reasoning on \
