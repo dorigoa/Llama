@@ -31,7 +31,7 @@ usage() {
 }
 
 split="layer"
-mtp="--spec-type draft-mtp --spec-draft-n-max 5"
+mtp="--spec-type draft-mtp --spec-draft-n-max 3"
 host="0.0.0.0"
 port="8080"
 quant="8"
@@ -58,7 +58,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         -4bit)
             quant="4"
-            mtp="--spec-type draft-mtp --spec-draft-n-max 5 -md ${gguf_prefix}/qwen3.8/mtp-Qwen3.8-27B-Q4_0.gguf"
+            mtp="--spec-type draft-mtp --spec-draft-n-max 3 -md ${gguf_prefix}/qwen3.8/mtp-Qwen3.8-27B-Q4_0.gguf"
             shift 1
             ;;
         -kv8)
