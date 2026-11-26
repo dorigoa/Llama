@@ -23,6 +23,7 @@ usage() {
     echo "  -kv8                 Chose 8 bits quantization for KV cache"
     echo "  -no-mtp              Disable multi token prediction (default: enabled)"
     echo "  -ctx <context>       Context size in tokens (integer, default = 262144)"
+    echo "  -batch <batch>       Size of batch higher is better for large prompt processing (default = 512)"
     echo "  -log <file>          Log file for stdout+stderr"
     echo "                       (default: /tmp/llama-server-<timestamp>.log)"
     echo "  -llama-server <path> path to llama-server engine (default: /opt/llama.cpp/llama-server)"
@@ -41,6 +42,7 @@ llama="/opt/llama.cpp/llama-server"
 gguf_prefix="/nvme/gguf"
 kq="f16"
 vq="f16"
+batch="512"
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -68,6 +70,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         -ctx)
             context="$2"
+            shift 2
+            ;;
+        -batch)
+            batch="$2"
             shift 2
             ;;
         -log)
@@ -120,7 +126,7 @@ ONEAPI_DEVICE_SELECTOR=level_zero:* GGML_SYCL_DEV2DEV_MEMCPY=2 $llama \
    --load-mode none \
    -fa 1 \
    --cache-type-k $kq --cache-type-v $vq \
-   -b 2048 -ub 1024 \
+   -b 2048 -ub $batch \
    -np 1 \
    --jinja \
    --reasoning on \
